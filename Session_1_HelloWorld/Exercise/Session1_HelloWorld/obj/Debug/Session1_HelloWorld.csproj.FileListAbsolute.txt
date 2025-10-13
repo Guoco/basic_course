@@ -1,0 +1,10 @@
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\bin\Debug\Session1_HelloWorld.exe.config
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\bin\Debug\Session1_HelloWorld.exe
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\bin\Debug\Session1_HelloWorld.pdb
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\obj\Debug\Session1_HelloWorld.csproj.AssemblyReference.cache
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\obj\Debug\Session1_HelloWorld.Form1.resources
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\obj\Debug\Session1_HelloWorld.Properties.Resources.resources
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\obj\Debug\Session1_HelloWorld.csproj.GenerateResource.cache
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\obj\Debug\Session1_HelloWorld.csproj.CoreCompileInputs.cache
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\obj\Debug\Session1_HelloWorld.exe
+D:\C#Exercise\Session_1：HelloWorld\Session1_HelloWorld\obj\Debug\Session1_HelloWorld.pdb
