@@ -1,0 +1,10 @@
+D:\C#Exercise\Session2_Operator\bin\Debug\Session2_Operator.exe.config
+D:\C#Exercise\Session2_Operator\bin\Debug\Session2_Operator.exe
+D:\C#Exercise\Session2_Operator\bin\Debug\Session2_Operator.pdb
+D:\C#Exercise\Session2_Operator\obj\Debug\Session2_Operator.csproj.AssemblyReference.cache
+D:\C#Exercise\Session2_Operator\obj\Debug\Session2_Operator.Form1.resources
+D:\C#Exercise\Session2_Operator\obj\Debug\Session2_Operator.Properties.Resources.resources
+D:\C#Exercise\Session2_Operator\obj\Debug\Session2_Operator.csproj.GenerateResource.cache
+D:\C#Exercise\Session2_Operator\obj\Debug\Session2_Operator.csproj.CoreCompileInputs.cache
+D:\C#Exercise\Session2_Operator\obj\Debug\Session2_Operator.exe
+D:\C#Exercise\Session2_Operator\obj\Debug\Session2_Operator.pdb
