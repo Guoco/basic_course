@@ -35,8 +35,6 @@
 
 ## 📞 聯絡方式
 
-Email：guojt@tzuchi.com.tw
-
 Line Group：Guo Guo
 
 如有問題，請於課堂或群組中詢問老師。
