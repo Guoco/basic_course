@@ -35,13 +35,6 @@
 
 1. 開啟 Visual Studio 後，選擇「建立新專案」。
 2. 選擇「Windows Forms 應用程式」或「主控台應用程式」測試是否可正常建立專案。
-   ![1760340228660](image/Course0/1760340228660.png)
-
-   ![1760340270900](image/Course0/1760340270900.png)
-
-   ![1760340803159](image/Course0/1760340803159.png)
-
-   ![1760340865604](image/Course0/1760340865604.png)
 
 ## 步驟七：[變更語言](https://dog0416.blogspot.com/2021/07/visual-studio-2022.html#google_vignette)
 
