@@ -76,6 +76,23 @@ catch (Exception ex)
 }
 ```
 
+##  Leave 事件介紹：
+```
+if (txtAdd2.Text.Trim() !="")
+{
+    int iAdd2;
+    if (int.TryParse(txtAdd2.Text, out iAdd2))
+    {
+        //doNothing
+    }
+    else
+    {
+        MessageBox.Show("你輸入的資料不是數字喔");
+        txtAdd2.Text = "";
+        txtAdd2.Focus();
+    }
+}
+```
 ---
 
 ## 📝 課堂小測驗一：判斷火車票座位（靠窗/靠走道）
