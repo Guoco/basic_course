@@ -71,7 +71,8 @@ try
 catch (Exception ex)
 {
     // 當錯誤發生時執行這裡
-    Console.WriteLine("錯誤訊息：" + ex.Message);
+    //Console.WriteLine("錯誤訊息：" + ex.Message);
+    MessageBox.Show(ex.Message);
 }
 ```
 
