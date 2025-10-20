@@ -38,123 +38,13 @@ namespace Session2_Operator
             txtAnswerA.Text = (Convert.ToInt16(txtAdd1.Text) + Convert.ToInt16(txtAdd2.Text)).ToString();
         }
 
-
-        private void btnCalculateSub_Click(object sender, EventArgs e)
-        {
-            int iSub1;
-            int iSub2;
-            //判斷txtSub1.Text輸入的是否是整數
-            if (!int.TryParse(txtSub1.Text, out iSub1))
-            {
-                MessageBox.Show("您輸入的不是整數喔");
-                txtSub1.Focus();
-                return;
-            }
-            if (!int.TryParse(txtSub2.Text, out iSub2))
-            {
-                MessageBox.Show("您輸入的不是整數喔");
-                txtSub2.Focus();
-                return;
-            }
-            //iSub1-iSub2
-            txtAnswerSub.Text = (iSub1 - iSub2).ToString();
-        }
-
-        private void btnCalculateMut_Click(object sender, EventArgs e)
-        {
-            int iMut1;
-            int iMut2;
-            //判斷txtMut1.Text輸入的是否是整數
-            if (!int.TryParse(txtMut1.Text, out iMut1))
-            {
-                MessageBox.Show("您輸入的不是整數喔");
-                txtMut1.Focus();
-                return;
-            }
-            if (!int.TryParse(txtMut2.Text, out iMut2))
-            {
-                MessageBox.Show("您輸入的不是整數喔");
-                txtMut2.Focus();
-                return;
-            }
-            //iMut1*iMut2
-            txtAnswerMut.Text = (iMut1 * iMut2).ToString();
-        }
-
-        private void btnCalculateDiv_Click(object sender, EventArgs e)
-        {
-            int iDiv1;
-            int iDiv2;
-            //判斷txtDiv1.Text輸入的是否是整數
-            if (!int.TryParse(txtDiv1.Text, out iDiv1))
-            {
-                MessageBox.Show("您輸入的不是整數喔");
-                txtDiv1.Focus();
-                return;
-            }
-            if (!int.TryParse(txtDiv2.Text, out iDiv2))
-            {
-                MessageBox.Show("您輸入的不是整數喔");
-                txtDiv2.Focus();
-                return;
-            }
-            //iMut1/iMut2
-            txtAnswerDiv.Text = (iDiv1 / iDiv2).ToString();
-        }
-
-        private void btnCalculateMod_Click(object sender, EventArgs e)
-        {
-            int iMod1;
-            int iMod2;
-            //判斷txtMod1.Text輸入的是否是整數
-            if (!int.TryParse(txtMod1.Text, out iMod1))
-            {
-                MessageBox.Show("您輸入的不是整數喔");
-                txtMod1.Focus();
-                return;
-            }
-            if (!int.TryParse(txtMod2.Text, out iMod2))
-            {
-                MessageBox.Show("您輸入的不是整數喔");
-                txtMod2.Focus();
-                return;
-            }
-            //iMod1/iMod2
-            txtAnswerMod.Text = (iMod1 % iMod2).ToString();
-        }
         private void btnClearAdd_Click(object sender, EventArgs e)
         {
             txtAdd1.Clear();
             txtAdd2.Text = "";
             txtAnswerA.Text = "";
         }
-        private void btnClearSub_Click(object sender, EventArgs e)
-        {
-            txtSub1.Text = "";
-            txtSub2.Text = "";
-            txtAnswerSub.Text = "";
-        }
 
-        private void btnClearMut_Click(object sender, EventArgs e)
-        {
-            txtMut1.Text = "";
-            txtMut2.Text = "";
-            txtAnswerMut.Text = "";
-        }
-
-        private void btnClearDiv_Click(object sender, EventArgs e)
-        {
-            txtDiv1.Text = "";
-            txtDiv2.Text = "";
-            txtAnswerDiv.Text = "";
-        }
-
-        private void btnClearMod_Click(object sender, EventArgs e)
-        {
-            txtMod1.Text = "";
-            txtMod2.Text = "";
-            txtAnswerMod.Text = "";
-        }
 
 
         //---------暫時先不看-------------------
