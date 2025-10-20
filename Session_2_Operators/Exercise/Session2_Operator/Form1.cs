@@ -65,21 +65,22 @@ namespace Session2_Operator
         private void txtAdd1_KeyPress(object sender, KeyPressEventArgs e)
         {
             //Char.IsNumber 判斷書入是否為數字
-            //Char.IsControl 判斷是否為控制字元 ex:enter backspace
-            //if (!Char.IsNumber(e.KeyChar) && !Char.IsControl(e.KeyChar))
-            //{
-            //    e.Handled = true;//事件已處理--->這裡為消除非數字及控制項之字元
-            //}
+            //Char.IsControl 判斷是否為控制字元 ex: enter backspace
+            if (!Char.IsNumber(e.KeyChar) && !Char.IsControl(e.KeyChar))
+            {
+                e.Handled = true;//事件已處理--->這裡為消除非數字及控制項之字元
+            }
 
         }
 
         private void txtAdd2_TextChanged(object sender, EventArgs e)
         {
-            // Regex.IsMatch 運算式是否在輸入字串中尋找比對 是否符合條件
-            //if (txtAdd2.Text !="" && !Regex.IsMatch(txtAdd2.Text, @"^[0-9]*$"))
-            //{
-            //    txtAdd2.Text = txtAdd2.Text.Substring(0, txtAdd2.Text.Length - 1);
-            //}
+            //Regex.IsMatch 運算式是否在輸入字串中尋找比對 是否符合條件
+            if (!Regex.IsMatch(txtAdd2.Text, @"^[0-9]*$"))
+            {
+                MessageBox.Show("請輸入數字");
+                txtAdd2.Text = "";
+			}
         }
     }
 }
