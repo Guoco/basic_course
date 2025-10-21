@@ -71,10 +71,32 @@ try
 catch (Exception ex)
 {
     // 當錯誤發生時執行這裡
+<<<<<<< HEAD
     MessageBox.Show("你輸入的資料不是數字喔");
+=======
+    //Console.WriteLine("錯誤訊息：" + ex.Message);
+    MessageBox.Show(ex.Message);
+>>>>>>> 6eec8769ece144bda18f17aaf7be81c6e0df22be
 }
 ```
 
+##  Leave 事件介紹：
+```
+if (txtAdd2.Text.Trim() !="")
+{
+    int iAdd2;
+    if (int.TryParse(txtAdd2.Text, out iAdd2))
+    {
+        //doNothing
+    }
+    else
+    {
+        MessageBox.Show("你輸入的資料不是數字喔");
+        txtAdd2.Text = "";
+        txtAdd2.Focus();
+    }
+}
+```
 ---
 
 ## 🏠 回家作業：完成 乘法 除法 程式 如果有空 可以多做 取餘數
