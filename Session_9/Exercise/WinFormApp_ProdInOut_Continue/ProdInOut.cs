@@ -497,7 +497,7 @@ namespace WinFormApp_ProdInOut
 
         private void btnInpDetailQuery_Click(object sender, EventArgs e)
         {
-            
+
         }
 
 
@@ -558,7 +558,34 @@ namespace WinFormApp_ProdInOut
 
         private void txtOutProdNo_Leave(object sender, EventArgs e)
         {
-            
+            if (txtOutProdNo.Text.Trim() == "") return;
+            try
+            {
+                using (SqlConnection mySqlConn = new SqlConnection(strConnString))
+                {
+                    mySqlConn.Open();
+                    string strSQL = "select * from ProductTbl where chProdNo = '" + txtOutProdNo.Text.Trim() + "' ";
+                    using (SqlCommand sqlCmd = new SqlCommand(strSQL, mySqlConn))
+                    {
+                        DataTable dt = new DataTable();
+                        dt.Load(sqlCmd.ExecuteReader());
+                        if (dt.Rows.Count == 0)
+                        {
+                            MessageBox.Show("查無此產品代號資料" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+                            txtOutProdNo.Focus();
+                            return;
+                        }
+                        txtOutProdName.Text = dt.Rows[0]["chProdName"].ToString().Trim();
+                        if (txtOutPrice.Text.Trim() == "") txtOutPrice.Text = dt.Rows[0]["rlSellPrice"].ToString().Trim();
+                        if (txtOutQty.Text.Trim() == "") txtOutQty.Text = "0";
+                        if (txtOutUnit.Text.Trim() == "") txtOutUnit.Text = dt.Rows[0]["chUnit"].ToString().Trim();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void txtOutPrice_Leave(object sender, EventArgs e)
@@ -585,13 +612,127 @@ namespace WinFormApp_ProdInOut
 
         private void txtOutQty_Leave(object sender, EventArgs e)
         {
-            
+            if (txtOutQty.Text.Trim() == "" || txtOutQty.Text.Trim() == "0")
+            {
+                lblOutAmt.Text = "";
+                return;
+            }
+            decimal mDeciNumber = 0;
+            bool mDeciFlag = decimal.TryParse(txtOutQty.Text.Trim(), out mDeciNumber);
+            if (mDeciFlag == false)
+            {
+                MessageBox.Show("出貨數量只可為數字【 0-9 . - 】等" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+                lblOutAmt.Text = "";
+                txtOutQty.Focus();
+                return;
+            }
+            if (txtOutPrice.Text.Trim() != "" && txtOutPrice.Text.Trim() != "0")
+            {
+                lblOutAmt.Text = Convert.ToString(mDeciNumber * decimal.Parse(txtOutPrice.Text.Trim()));
+            }
         }
 
         // 確認按鈕按下事件（出貨系統）
         private void btnOutOK_Click(object sender, EventArgs e)
         {
-            
+            if (txtOutProdNo.Text.Trim() == "") return;
+            txtOutProdNo.Text = txtOutProdNo.Text.Trim().ToUpper();
+            try
+            {
+                using (SqlConnection mySqlConn = new SqlConnection(strConnString))
+                {
+                    mySqlConn.Open();
+                    string strSQL = "select * from FactoryTbl where chFactNo = '" + txtOutFactNo.Text.Trim() + "' ";
+                    using (SqlCommand sqlCmd = new SqlCommand(strSQL, mySqlConn))
+                    {
+                        DataTable dtTbl = new DataTable();
+                        dtTbl.Load(sqlCmd.ExecuteReader());
+                        if (dtTbl.Rows.Count == 0)
+                        {
+                            MessageBox.Show("查無此廠商代號" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+                            return;
+                        }
+                    }
+                    strSQL = "select * from ProductTbl where chProdNo = '" + txtOutProdNo.Text.Trim() + "' ";
+                    using (SqlCommand sqlCmd = new SqlCommand(strSQL, mySqlConn))
+                    {
+                        DataTable dtTbl = new DataTable();
+                        dtTbl.Load(sqlCmd.ExecuteReader());
+                        if (dtTbl.Rows.Count == 0)
+                        {
+                            MessageBox.Show("查無此產品代號" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+                            txtOutProdNo.Focus();
+                            return;
+                        }
+                    }
+                    if (txtOutPrice.Text.Trim() == "" || txtOutPrice.Text.Trim() == "0")
+                    {
+                        MessageBox.Show("單價不可為【 0 及空白 】" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+                        txtOutPrice.Focus();
+                        return;
+                    }
+                    decimal mDeciNumber = 0;
+                    bool mDeciFlag = decimal.TryParse(txtOutPrice.Text.Trim(), out mDeciNumber);
+                    if (mDeciFlag == false)
+                    {
+                        MessageBox.Show("單價只可為數字【 0-9 . - 】等" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+                        txtOutPrice.Focus();
+                        return;
+                    }
+                    if (txtOutQty.Text.Trim() == "" || txtOutQty.Text.Trim() == "0")
+                    {
+                        MessageBox.Show("出貨數量不可為【 0 及空白 】" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+                        txtOutQty.Focus();
+                        return;
+                    }
+                    mDeciNumber = 0;
+                    mDeciFlag = decimal.TryParse(txtOutQty.Text.Trim(), out mDeciNumber);
+                    if (mDeciFlag == false)
+                    {
+                        MessageBox.Show("出貨數量只可為數字【 0-9 . - 】等" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+                        txtOutQty.Focus();
+                        return;
+                    }
+                    strSQL = "select rlStockQty from ProductTbl where chProdNo = '" + txtOutProdNo.Text.Trim() + "' ";
+                    using (SqlCommand sqlCmd = new SqlCommand(strSQL, mySqlConn))
+                    {
+                        decimal currentStock = Convert.ToDecimal(sqlCmd.ExecuteScalar());
+                        decimal outQty = decimal.Parse(txtOutQty.Text.Trim());
+
+                        // 檢查本次出貨數量是否超過庫存（假設一張單同一個產品只會有一筆）
+                        if (currentStock < outQty)
+                        {
+                            MessageBox.Show("商品 " + txtOutProdNo.Text.Trim() + " 庫存不足！" + "\r\n" +
+                                          "目前庫存：" + currentStock + "\r\n" +
+                                          "本次出貨數量：" + outQty + "\r\n\r\n" +
+                                          "按任一鍵離開!", "敬請確認");
+                            txtOutQty.Focus();
+                            return;
+                        }
+                    }
+
+                    DgvOut.Rows.Add(txtOutProdNo.Text.Trim(), txtOutProdName.Text.Trim(), txtOutPrice.Text.Trim(), txtOutQty.Text.Trim(), lblOutAmt.Text.Trim(), txtOutUnit.Text.Trim());
+                    if (txtOutDateTime.Text.Trim() == "")
+                    {
+                        string tmpDate = GetDateToDate13();
+                        txtOutDateTime.Text = tmpDate.Substring(0, 7) + "-" + tmpDate.Substring(7, 6);
+                    }
+                    txtOutProdNo.Text = "";
+                    txtOutProdName.Text = "";
+
+                    txtOutPrice.Text = "";
+                    txtOutQty.Text = "";
+                    lblOutAmt.Text = "";
+                    txtOutUnit.Text = "";
+
+                    txtOutProdNo.Focus();
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void btnOutClear_Click(object sender, EventArgs e)
@@ -614,14 +755,22 @@ namespace WinFormApp_ProdInOut
 
         private void btnClearOutDgv_Click(object sender, EventArgs e)
         {
+            if (DgvOut.RowCount == 0) return;
 
+            DialogResult myResult = MessageBox.Show("確定要將底下單張資料都清除?", "敬請再次確認", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (myResult == DialogResult.Yes)
+            {
+                DgvOut.Rows.Clear();
+                txtOutDateTime.Text = "";
+                MessageBox.Show("按任一鍵離開!", "清除成功");
+            }
         }
 
         private void btnSaveOutDgv_Click(object sender, EventArgs e)
         {
 
-            
-           
+
+
         }
     }
 }

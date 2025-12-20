@@ -499,25 +499,146 @@ btnClearOutDgv_Click  請同學練習實作
 2. 更新商品庫存（ProductTbl）
 3. 新增出貨單頭（OutputHeadTbl）
 
-#### 3.2 完整程式碼範例
+#### 3.2 實作步驟說明
+
+請同學根據以下步驟，自行實作 `btnSaveOutDgv_Click` 事件處理：
+
+**步驟 1：基本驗證**
 
 ```csharp
-private void btnSaveOutDgv_Click(object sender, EventArgs e)
+// 如果DataGridView中沒有資料，則不執行
+if (DgvOut.Rows.Count == 0) return;
+
+// 如果產品代號、單價、出貨數量為空，則顯示錯誤訊息
+if (txtOutProdNo.Text.Trim() != "" || txtOutPrice.Text.Trim() != "" || txtOutQty.Text.Trim() != "")
+{
+    MessageBox.Show("螢幕上尚未未完成的輸入資料" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
+    return;
+}
+```
+
+**步驟 2：建立資料庫連線並開始交易**
+
+```csharp
+// 建立資料庫連線
+using (SqlConnection mySqlConn = new SqlConnection(strConnString))
+{
+    try
+    {
+        mySqlConn.Open();
+  
+        // 開始交易
+        SqlTransaction myTransaction = mySqlConn.BeginTransaction();
+        // 嘗試執行
+        try
         {
-            // 如果DataGridView中沒有資料，則不執行
-            if (DgvOut.Rows.Count == 0) return;
-
-            // 如果產品代號、單價、出貨數量為空，則顯示錯誤訊息
-            if (txtOutProdNo.Text.Trim() != "" || txtOutPrice.Text.Trim() != "" || txtOutQty.Text.Trim() != "")
-            {
-                MessageBox.Show("螢幕上尚未未完成的輸入資料" + "\r\n\r\n" + "按任一鍵離開!", "敬請確認");
-                return;
-            }
-
-            // ---------------------------------------------------------------------------
-			// 此處請同學實作資料存取  參考進貨並按照上述流程
-			// ---------------------------------------------------------------------------
+            // ... 後續步驟在此實作
         }
+        catch (Exception ex)
+        {
+            // 回滾交易
+            myTransaction.Rollback();
+            // 顯示例外錯誤訊息
+            MessageBox.Show(ex.Message);
+        }
+    }
+    catch (Exception ex)
+    {
+        //外層的Exception 只為抓取connection Error; 其他的Error幾乎都在內層Exception的範圍內
+        MessageBox.Show(ex.Message);
+    }
+}
+```
+
+**步驟 3：準備基本變數**
+
+```csharp
+// 準備出貨日期時間字串 民國年月日時分秒：yyyMMddhhmmss
+string outDateTime = txtOutDateTime.Text.Substring(0, 7) + txtOutDateTime.Text.Substring(8, 6);
+string factNo = txtOutFactNo.Text.Trim();
+decimal mOutTotAmt = 0;
+
+// 在迴圈外建立共用的 SqlCommand 物件
+SqlCommand sqlCmd = new SqlCommand();
+sqlCmd.Connection = mySqlConn;
+// 設定 SqlCommand 的 Transaction
+sqlCmd.Transaction = myTransaction;
+```
+
+**步驟 4：迴圈處理 DataGridView 中的每一筆資料**
+
+```csharp
+// 迴圈處理 DataGridView 中的每一筆資料
+for (int i = 0; i < DgvOut.Rows.Count; i++)
+{
+    // 取得 DataGridView 中的資料
+    string prodNo = DgvOut.Rows[i].Cells["OutProdNo"].Value.ToString().Trim();
+    string outPrice = DgvOut.Rows[i].Cells["OutPrice"].Value.ToString().Trim();
+    string outQty = DgvOut.Rows[i].Cells["OutQty"].Value.ToString().Trim();
+    string outAmt = DgvOut.Rows[i].Cells["OutAmt"].Value.ToString().Trim();
+  
+    // 累加總金額
+    mOutTotAmt = mOutTotAmt + decimal.Parse(outAmt);
+  
+    // ... 後續步驟在此實作
+}
+```
+
+**步驟 5：新增出貨單身（OutputDetailTbl）**
+
+```csharp
+// 1. 新增出貨單身（OutputDetailTbl）
+string strSQL = "INSERT INTO OutputDetailTbl (chOutpDateTime, chFactNo, chProdNo, rlOutpPrice, rlQty, rlOutpAmt) " +
+               "VALUES ('" + outDateTime + "', '" + factNo + "', '" + prodNo + "', " +
+               outPrice + ", " + outQty + ", " + outAmt + ")";
+
+sqlCmd.CommandText = strSQL;
+sqlCmd.ExecuteNonQuery();
+```
+
+**步驟 6：更新商品庫存主檔的庫存數量（減少庫存）**
+
+```csharp
+// 2. 更新商品庫存主檔的庫存數量（減少庫存）
+strSQL = "UPDATE ProductTbl SET rlStockQty = rlStockQty - " + outQty +
+         " WHERE chProdNo = '" + prodNo + "'";
+
+sqlCmd.CommandText = strSQL;
+sqlCmd.ExecuteNonQuery();
+```
+
+**步驟 7：新增出貨單頭（OutputHeadTbl）**
+
+```csharp
+// 3. 新增出貨單頭（OutputHeadTbl）
+string insertHeadSQL = "INSERT INTO OutputHeadTbl (chOutpDateTime, chFactNo, rlOutpTotAmt) " +
+                      "VALUES ('" + outDateTime + "', '" + factNo + "', " + Convert.ToString(mOutTotAmt) + ")";
+
+sqlCmd.CommandText = insertHeadSQL;
+sqlCmd.ExecuteNonQuery();
+```
+
+**步驟 8：確認交易並清除畫面**
+
+```csharp
+// 確認交易
+myTransaction.Commit();
+// 顯示訊息
+MessageBox.Show("按任一鍵繼續!", "匯入成功!!");
+// 清除按鈕按下事件
+btnOutClear_Click(null, null);
+// 清除DataGridView中的資料
+DgvOut.Rows.Clear();
+// 清除出貨日期時間
+txtOutDateTime.Text = "";
+```
+
+#### 3.3 完整程式碼範例（請同學練習實作）
+
+請同學根據上述步驟，完成 `btnSaveOutDgv_Click` 事件處理的實作：
+
+```csharp
+請同學練習實作 btnSaveOutDgv_Click
 ```
 
 ### 💡 重點提示
@@ -526,398 +647,6 @@ private void btnSaveOutDgv_Click(object sender, EventArgs e)
 - 出貨時，庫存數量應該**減少**（進貨時是增加）
 - 出貨單價通常使用商品的售價（`rlSellPrice`）
 - 記得檢查庫存數量是否足夠（出貨數量不能超過庫存數量）
-
----
-
-## 📊 單元三：SQL 語法教學
-
-### 📝 欄位別名（Alias）
-
-使用 `AS` 關鍵字可以為欄位設定別名，讓查詢結果更容易閱讀：
-
-```sql
-SELECT 
-    chInpDateTime AS '進貨日期時間',
-    chFactNo AS '廠商代號',
-    chProdNo AS '商品編號',
-    rlInpQty AS '進貨數量',
-    rlInpPrice AS '進貨單價',
-    rlInpAmt AS '進貨金額'
-FROM InputDetailTbl
-```
-
-> 💡 **提示**：別名可以使用單引號或雙引號包起來，也可以不使用引號（如果別名不包含空格）。
-
-#### 練習題：ProductTbl 資料表的欄位別名
-
-請同學練習為 `ProductTbl` 資料表的所有欄位設定中文別名：
-![1765692423203](image/Course9/1765692423203.png)
-
-### 🎯 JOIN 的種類
-
-SQL JOIN 用於結合兩個或多個資料表的資料。常見的 JOIN 種類包括：
-
-![1765690364619](image/Course9/1765690364619.png)
-
-JOIN  分為連結後的欄位呈現  (擴充欄位)、資料關係比對
-
-### 📝 LEFT JOIN 深入講解
-
-#### 3.1 LEFT JOIN 的撰寫方式
-
-```sql
-SELECT 
-    左表.欄位1,
-    左表.欄位2,
-    右表.欄位1,
-    右表.欄位2
-FROM 左表
-LEFT JOIN 右表 ON 左表.關聯欄位 = 右表.關聯欄位
-```
-
-#### 3.2 LEFT JOIN 的預期結果
-
-- **左表的所有記錄都會被返回**
-- 如果右表有匹配的記錄，則顯示右表的資料
-- 如果右表沒有匹配的記錄，則右表的欄位顯示為 `NULL`
-
-#### 3.2.1 範例：資料不全的情況
-
-假設我們有以下情況：
-
-- **交易明細表（InputDetailTbl）** 有 P001、P002、P003、P004 的商品記錄
-
-```sql
-INSERT INTO InputDetailTbl (chInpDateTime, chFactNo, chProdNo, rlInpQty, rlInpPrice, rlInpAmt) VALUES
-('1141202153000', 'F001', 'P001', 10, 250, 2500),
-('1141202153000', 'F001', 'P002', 20, 200, 4000),
-('1141202153000', 'F001', 'P003', 15, 300, 4500),
-('1141202153000', 'F001', 'P004', 5, 150, 750);
-INSERT INTO InputHeadTbl (chInpDateTime, chFactNo, rlInpTotAmt) VALUES ('1141202153000', 'F001', 11750);
-```
-
-- **商品基本檔（ProductTbl）** 只有 P001、P002、P003 的商品資料（缺少 P004）
-
-**交易明細表（InputDetailTbl）的資料：**
-
-| chInpDateTime | chFactNo | chProdNo | rlInpQty | rlInpPrice | rlInpAmt |
-| ------------- | -------- | -------- | -------- | ---------- | -------- |
-| 11412021530   | F001     | P001     | 10       | 250        | 2500     |
-| 11412021530   | F001     | P002     | 20       | 200        | 4000     |
-| 11412021530   | F001     | P003     | 15       | 300        | 4500     |
-| 11412021530   | F001     | P004     | 5        | 150        | 750      |
-
-**商品基本檔（ProductTbl）的資料：**
-
-| chProdNo | chProdName         | chUnit | rlStockQty | rlInpPrice | rlSellPrice |
-| -------- | ------------------ | ------ | ---------- | ---------- | ----------- |
-| P001     | iPhone 17 Pro      | 支     | 100        | 250        | 400         |
-| P002     | SAMSUNG Galaxy S25 | 支     | 100        | 200        | 300         |
-| P003     | iPad Pro           | 台     | 50         | 300        | 450         |
-
-**使用 LEFT JOIN 查詢：**
-
-```sql
-SELECT 
-    d.chProdNo AS '商品編號',
-    p.chProdName AS '商品名稱',
-    d.rlInpQty AS '進貨數量',
-    d.rlInpPrice AS '進貨單價',
-    d.rlInpAmt AS '進貨金額'
-FROM InputDetailTbl d
-LEFT JOIN ProductTbl p ON d.chProdNo = p.chProdNo
-```
-
-**LEFT JOIN 查詢結果：**
-
-| 商品編號 | 商品名稱           | 進貨數量 | 進貨單價 | 進貨金額 |
-| -------- | ------------------ | -------- | -------- | -------- |
-| P001     | iPhone 17 Pro      | 10       | 250      | 2500     |
-| P002     | SAMSUNG Galaxy S25 | 20       | 200      | 4000     |
-| P003     | iPad Pro           | 15       | 300      | 4500     |
-| *P004*   | *NULL*             | *5*      | *150*    | *750*    |
-
-**重點說明：**
-
-- ✅ **P001、P002、P003**：在商品基本檔中有對應資料，所以顯示商品名稱
-- ⚠️ **P004**：在商品基本檔中**沒有**對應資料，所以商品名稱欄位顯示為 `NULL`
-- ✅ **所有交易明細記錄都被保留**：即使 P004 在商品基本檔中不存在，交易明細的記錄仍然會被返回
-
-這個範例清楚地展示了 LEFT JOIN 的特性：**即使右表（ProductTbl）沒有匹配的記錄，左表（InputDetailTbl）的所有記錄都會被返回**，這正是 LEFT JOIN 與 INNER JOIN 的最大差異。
-
-#### 3.3 使用 INNER JOIN 的差異
-
-如果我們使用 INNER JOIN，同樣以缺少 P004 為例：
-
-**使用相同的資料表：**
-
-- **交易明細表（InputDetailTbl）** 有 P001、P002、P003、P004 的商品記錄
-- **商品基本檔（ProductTbl）** 只有 P001、P002、P003 的商品資料（缺少 P004）
-
-**使用 INNER JOIN 查詢：**
-
-```sql
-SELECT 
-    d.chProdNo AS '商品編號',
-    p.chProdName AS '商品名稱',
-    d.rlInpQty AS '進貨數量',
-    d.rlInpPrice AS '進貨單價',
-    d.rlInpAmt AS '進貨金額'
-FROM InputDetailTbl d
-INNER JOIN ProductTbl p ON d.chProdNo = p.chProdNo
-```
-
-**INNER JOIN 查詢結果：**
-
-| 商品編號 | 商品名稱           | 進貨數量 | 進貨單價 | 進貨金額 |
-| -------- | ------------------ | -------- | -------- | -------- |
-| P001     | iPhone 17 Pro      | 10       | 250      | 2500     |
-| P002     | SAMSUNG Galaxy S25 | 20       | 200      | 4000     |
-| P003     | iPad Pro           | 15       | 300      | 4500     |
-
-**重點說明：**
-
-- ✅ **P001、P002、P003**：在商品基本檔中有對應資料，所以顯示商品名稱
-- ❌ **P004**：在商品基本檔中**沒有**對應資料，**整筆記錄被過濾掉**，不會出現在查詢結果中
-- ⚠️ **只返回有匹配的記錄**：INNER JOIN 只會返回兩個表中都有對應資料的記錄
-
-**LEFT JOIN vs INNER JOIN 的差異比較：**
-
-| 比較項目 | LEFT JOIN                 | INNER JOIN  |
-| -------- | ------------------------- | ----------- |
-| P001     | ✅ 顯示                    | ✅ 顯示      |
-| P002     | ✅ 顯示                    | ✅ 顯示      |
-| P003     | ✅ 顯示                    | ✅ 顯示      |
-| P004     | ✅ 顯示（商品名稱為 NULL） | ❌**不顯示** |
-
-這個範例清楚地展示了 INNER JOIN 的特性：**只返回兩個表中都有匹配的記錄，如果右表（ProductTbl）沒有匹配的記錄，左表（InputDetailTbl）的該筆記錄會被完全過濾掉**，這就是 INNER JOIN 與 LEFT JOIN 的最大差異。
-
-#### 3.5 結果驗證
-
-1. 在 SSMS 中執行 LEFT JOIN 的查詢
-2. 觀察結果：所有進貨明細都會顯示
-3. 在 SSMS 中執行 INNER JOIN 的查詢
-4. 觀察結果：只顯示有對應商品的進貨明細
-5. 比較兩者的差異
-
-#### 📝 練習題：出貨單頭的 LEFT JOIN 查詢
-
-請同學完成以下練習：
-請分析每個欄位需要從哪個資料表取得資料，並寫出 SQL 查詢  以得到此圖內容的資料
-
-![1765717019933](image/Course9/1765717019933.png)
-
-### 📝 實戰範例：多表 JOIN 查詢進貨明細報表
-
-#### 資料表關聯關係圖
-
-```
-InputHeadTbl (InpH) ──LEFT JOIN──> InputDetailTbl (InpD)
-     │                                    │
-     │                                    │
-     └──LEFT JOIN──> FactoryTbl (F)       └──LEFT JOIN──> ProductTbl (P)
-```
-
-以下是一個完整的實戰範例，展示如何使用多個 LEFT JOIN 來查詢進貨明細報表：
-
-```sql
-SELECT InpH.chInpDateTime AS '進貨日期', InpH.chFactNo AS '廠商代號',
-		F.chFactName AS '廠商名稱',InpD.chProdNo AS '商品代號', P.chProdName AS '商品名稱',
-		InpD.rlInpPrice AS '單價', InpD.rlInpQty AS '數量', InpD.rlInpAmt AS '單項金額'
-from InputHeadTbl InpH (nolock) 
-left join InputDetailTbl InpD (nolock) on InpH.chInpDateTime = InpD.chInpDateTime AND InpH.chFactNo = InpD.chFactNo
-left join FactoryTbl F (nolock) on InpH.chFactNo = F.chFactNo
-left join ProductTbl P (nolock) ON InpD.chProdNo = P.chProdNo 
-Where InpH.chInpDateTime >= '1141202000000' AND InpH.chInpDateTime <= '1141202153000'
-
-```
-
-#### SQL 結構講解
-
-**1. SELECT （欄位）**
-
-- `InpH.chInpDateTime AS '進貨日期'`：從進貨單頭表（InputHeadTbl，別名 `InpH`）取得進貨日期時間
-- `InpH.chFactNo AS '廠商代號'`：從進貨單頭表取得廠商代號
-- `F.chFactName AS '廠商名稱'`：從廠商主檔（FactoryTbl，別名 `F`）取得廠商名稱
-- `InpD.chProdNo AS '商品代號'`：從進貨單身表（InputDetailTbl，別名 `InpD`）取得商品代號
-- `P.chProdName AS '商品名稱'`：從商品主檔（ProductTbl，別名 `P`）取得商品名稱
-- `InpD.rlInpPrice AS '單價'`、`InpD.rlInpQty AS '數量'`、`InpD.rlInpAmt AS '單項金額'`：從進貨單身表取得價格、數量和金額資訊
-
-**2. FROM （主表）**
-
-- `from InputHeadTbl InpH (nolock)`：以進貨單頭表作為主表（左表），別名為 `InpH`
-- `(nolock)`：SQL Server 的提示，表示讀取時不鎖定資料表，適合報表查詢使用
-
-**3. LEFT JOIN （關聯其他資料表）**
-
-- **第一個 LEFT JOIN**：`left join InputDetailTbl InpD (nolock) on InpH.chInpDateTime = InpD.chInpDateTime AND InpH.chFactNo = InpD.chFactNo`
-
-  - 關聯進貨單身表（別名 `InpD`）
-  - 關聯條件：進貨日期時間和廠商代號都相同（因為主鍵是複合鍵）
-  - 目的：取得每張進貨單的明細資料
-- **第二個 LEFT JOIN**：`left join FactoryTbl F (nolock) on InpH.chFactNo = F.chFactNo`
-
-  - 關聯廠商主檔（別名 `F`）
-  - 關聯條件：廠商代號相同
-  - 目的：取得廠商名稱（擴充欄位）
-- **第三個 LEFT JOIN**：`left join ProductTbl P (nolock) ON InpD.chProdNo = P.chProdNo`
-
-  - 關聯商品主檔（別名 `P`）
-  - 關聯條件：商品代號相同
-  - 目的：取得商品名稱（擴充欄位）
-
-**4. WHERE 子句（篩選條件）**
-
-- `Where InpH.chInpDateTime >= '1141202000000' AND InpH.chInpDateTime <= '1141202153000'`
-- 篩選進貨日期時間在指定範圍內的記錄
-- `'1141202000000'` 表示民國 114 年 12 月 02 日 00:00:00（格式：yyyMMddhhmmss，13碼）
-- `'1141202153000'` 表示民國 114 年 12 月 02 日 15:30:00（格式：yyyMMddhhmmss，13碼）
-
-#### 查詢邏輯說明
-
-1. **以進貨單頭表為主**：查詢從 `InputHeadTbl` 開始，確保所有進貨單都會被查詢到
-2. **關聯進貨單身表**：透過進貨日期時間關聯，取得每張進貨單的明細資料
-3. **擴充廠商資訊**：透過廠商代號關聯廠商主檔，取得廠商名稱
-4. **擴充商品資訊**：透過商品代號關聯商品主檔，取得商品名稱
-5. **使用 LEFT JOIN 的原因**：確保即使某些資料表缺少對應資料（例如商品主檔中沒有該商品），進貨明細記錄仍然會被顯示
-
-#### 使用 LEFT JOIN 的優點
-
-- ✅ **資料完整性**：即使商品主檔或廠商主檔缺少資料，進貨明細仍會顯示
-- ✅ **報表需求**：報表通常需要顯示所有交易記錄，即使主檔資料不完整
-- ✅ **除錯方便**：可以發現主檔資料不完整的問題（顯示 NULL 值）
-
----
-
-## 📊 單元四：進貨明細表操作（進貨明細）
-
-### 🎯 功能說明
-
-本單元將實作進貨明細表功能，使用 SQL JOIN 查詢進貨明細，並使用 DataGridView 的 DataSource 屬性綁定 DataTable 來呈現資料。
-
-### 📝 步驟一：設計進貨明細表介面
-
-1. 建立新的表單或使用現有表單
-2. 加入 DataGridView 控制項（命名為 `dgvInputReport`）
-3. 加入「查詢」按鈕
-
-### 📝 步驟二：使用 DataSource 綁定 DataTable
-
-#### 2.1 使用 SqlCommand 填充 DataTable
-
-```csharp
-private void btnInpDetailQuery_Click(object sender, EventArgs e)
-        {
-            if (txtInpDetailSDate.Text.Length != 7 || txtInpDetailEDate.Text.Length != 7)
-            {
-                MessageBox.Show("起迄日期需為7碼日期, eg.1141201" + "\r\n\r\n" + "按任一鍵離開!", "日期錯誤!!!");
-                txtInpDetailSDate.Focus();
-                return;
-            }
-
-            this.Cursor = Cursors.WaitCursor;
-            lblInpDetailTotAmt.Text = "";
-            lblInpDetailTotAmt.Visible = false;
-            try
-            {
-                using (SqlConnection mySqlConn = new SqlConnection(strConnString))
-                {
-                    mySqlConn.Open();
-
-                    string strSQL = @"SELECT InpH.chInpDateTime AS '進貨日期', InpH.chFactNo AS '廠商代號',
-	                        F.chFactName AS '廠商名稱',InpD.chProdNo AS '商品代號', P.chProdName AS '商品名稱',
-                            InpD.rlInpPrice AS '單價', InpD.rlInpQty AS '數量', InpD.rlInpAmt AS '單項金額'
-                            from InputHeadTbl InpH (nolock) 
-                            left join InputDetailTbl InpD (nolock) on InpH.chInpDateTime = InpD.chInpDateTime AND InpH.chFactNo = InpD.chFactNo
-                            left join FactoryTbl F (nolock) on InpH.chFactNo = F.chFactNo
-                            left join ProductTbl P (nolock) ON InpD.chProdNo = P.chProdNo
-                            Where InpH.chInpDateTime >= '" + txtInpDetailSDate.Text.Trim() + "' AND InpH.chInpDateTime <= '" + txtInpDetailEDate.Text.Trim() + "999999'";
-                    using (SqlCommand sqlCmd = new SqlCommand(strSQL, mySqlConn))
-                    {
-                        DataTable dt = new DataTable();
-                        dt.Load(sqlCmd.ExecuteReader());
-                        if (dt.Rows.Count == 0)
-                        {
-                            MessageBox.Show("查詢區間內無進貨資料。" + "\r\n\r\n" + "按任一鍵離開!", "查無資料，敬請確認！！！");
-                            return;
-                        }
-                        dgvInpDetailReport.DataSource = dt;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-                this.Cursor = Cursors.Default;
-            }
-            this.Cursor = Cursors.Default;
-        }
-
-```
-
-#### 2.2 DataSource 綁定的優點
-
-- **自動產生欄位**：DataGridView 會根據 DataTable 的欄位自動產生對應的欄位
-- **自動顯示別名**：SQL 查詢中的欄位別名會自動成為 DataGridView 的欄位標題
-- **程式碼簡潔**：不需要手動使用迴圈新增資料列
-
-#### 2.3 清除 DataGridView 資料
-
-```csharp
-    dgvInputReport.DataSource = null;
-```
-
-### 💡 重點整理
-
-- **LEFT JOIN** 可以確保所有進貨明細都會被顯示，即使商品或廠商資料不存在
-- **欄位別名（Alias）** 可以讓查詢結果更容易閱讀，並自動成為 DataGridView 的欄位標題
-- **DataSource 綁定** 比使用迴圈新增資料列更簡潔、更有效率
-
----
-
-## 🏠 課後作業
-
-### 📋 作業要求
-
-完成出貨明細報表功能。
-
-### 🎯 作業步驟
-
-1. **設計出貨明細表介面**
-
-   - 建立新的表單或使用現有表單
-   - 加入 DataGridView 控制項
-   - 加入日期選擇控制項
-   - 加入「查詢」按鈕
-2. **撰寫 SQL 查詢語句**
-
-   - 使用 LEFT JOIN 查詢出貨明細
-   - 關聯 OutputHeadTbl、OutputDetailTbl、FactoryTbl 和 ProductTbl
-   - 加上適當的欄位別名
-   - 加入日期篩選條件
-3. **實作查詢功能**
-
-   - 使用 SqlCommand 填充 DataTable
-   - 使用 DataGridView 的 DataSource 屬性綁定 DataTable
-   - 處理錯誤情況
-
-### 💡 提示
-
-- 參考進貨明細表的實作方式
-- 使用 LEFT JOIN 確保所有出貨明細都會被顯示
-- 欄位別名使用中文，讓報表更容易閱讀
-
-### ✅ 驗證清單
-
-完成作業後，請確認：
-
-- [ ] 出貨明細表介面設計完整
-- [ ] SQL 查詢使用 LEFT JOIN
-- [ ] 欄位有適當的別名（中文）
-- [ ] 使用 DataSource 屬性綁定 DataTable
-- [ ] 日期篩選功能正常運作
-- [ ] 可以正確顯示出貨明細資料（含廠商名稱、商品名稱）
-- [ ] 所有功能都能正常運作
 
 ---
 
@@ -933,22 +662,5 @@ private void btnInpDetailQuery_Click(object sender, EventArgs e)
 - ✅ 實作出貨表單功能（參考進貨系統架構）
 - ✅ 出貨時庫存數量正確減少
 - ✅ 使用 SqlTransaction 確保資料一致性
-
-### SQL JOIN
-
-- ✅ 了解 SQL JOIN 的種類（INNER JOIN、LEFT JOIN 等）
-- ✅ 深入理解 LEFT JOIN 的撰寫方式與結果
-- ✅ 了解 INNER JOIN 與 LEFT JOIN 的差異
-
-### 欄位別名（Alias）
-
-- ✅ 學會使用 `AS` 關鍵字設定欄位別名
-- ✅ 別名可以讓查詢結果更容易閱讀
-
-### DataGridView 資料綁定
-
-- ✅ 學會使用 DataGridView 的 DataSource 屬性綁定 DataTable
-- ✅ 使用 SqlCommand 填充 DataTable
-- ✅ DataSource 綁定比使用迴圈新增資料列更簡潔、更有效率
 
 ---
